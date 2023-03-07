@@ -1,0 +1,103 @@
+﻿Public RunDate As Long
+Public Qtr, SType, RptgCo, Struct, InputFile, RunYear, RunMo, VName, Tolerance As String
+Public FCol, LCol, FRow, LRow As Long
+Public x, y, z As Integer
+Public InputSheet, Home As Worksheet
+
+Sub Button_Click()
+    With UserForm1
+        With .ComboBox1
+            .AddItem "Q1"
+            .AddItem "Q2"
+            .AddItem "Q3"
+            .AddItem "Q4"
+            .Value = Range("inpQtr").Value
+        End With
+        .TextBox1.Value = Range("inpYr").Value
+        .OptionButton1 = True
+        .Show
+    End With
+End Sub
+
+Sub Multiple_Variable()
+        
+Select Case SType
+    Case "Trad":    FCol = 29
+                    LCol = 70
+                    FRow = 5
+    Case "UL":      FCol = 37
+                    LCol = 72
+                    FRow = 5
+    Case "Payout":  FCol = 29
+                    LCol = 36
+                    FRow = 5
+    Case "NonVAnn": FCol = 17
+                    LCol = 39
+                    FRow = 5
+    Case "GrpVAnn": FCol = 17
+                    LCol = 40
+                    FRow = 5
+    Case "IndVAnn": FCol = 17
+                    LCol = 39
+                    FRow = 5
+    Case "ReinsYRT": FCol = 24
+                    LCol = 37
+                    FRow = 5
+    Case "RData":   FCol = 4
+                    LCol = 5
+                    FRow = 2
+    Case "CData":   FCol = 9
+                    LCol = 16
+                    FRow = 2
+    Case "PData":   FCol = 10
+                    LCol = 41
+                    FRow = 2
+End Select
+
+For z = FCol To LCol
+    Select Case SType
+        Case "CData":
+            If z = 14 Then
+                GoTo SkipZ
+            End If
+        Case "PData":
+            Select Case z
+                Case 23, 24, 25, 26, 28, 31, 33, 35, 40: GoTo SkipZ
+                'Case Default:
+            End Select
+        Case "RData":
+        Case Else:
+            Cells(4, z).FormulaR1C1 = "=IF(TRIM(R[-3]C)<>"""",TRIM(R[-3]C)&"" ""&TRIM(R[-2]C)&"" ""&TRIM(R[-1]C),IF(TRIM(R[-2]C)<>"""",TRIM(R[-2]C)&"" ""&TRIM(R[-1]C),TRIM(R[-1]C)))"
+    End Select
+
+    InputSheet.Cells(y, 1).Value = InputFile
+    InputSheet.Cells(y, 2).Value = Struct
+    InputSheet.Cells(y, 3) = Cells(FRow - 1, z)
+    InputSheet.Cells(y, 4) = Round(WorksheetFunction.Sum(Columns(z)), 2)
+    InputSheet.Cells(y, 5) = Tolerance
+    y = y + 1
+        
+SkipZ:
+Next z
+
+End Sub
+
+Sub Single_Variable()
+     
+        If SType = "RData" Or SType = "CData" Or SType = "PData" Then
+            z = Cells.Find(VName, Range("A1"), xlValues, xlPart, xlByRows, xlNext).Column
+            FRow = 2
+        Else: Range(Cells(4, 1), Cells(3, 1).End(xlToRight).Offset(1, 0)).FormulaR1C1 = "=IF(TRIM(R[-3]C)<>"""",TRIM(R[-3]C)&"" ""&TRIM(R[-2]C)&"" ""&TRIM(R[-1]C),IF(TRIM(R[-2]C)<>"""",TRIM(R[-2]C)&"" ""&TRIM(R[-1]C),TRIM(R[-1]C)))"
+            z = Cells.Find(VName, Range("A4"), xlValues, xlPart, xlByRows, xlNext).Column
+            FRow = 5
+        End If
+        
+        InputSheet.Cells(y, 1) = InputFile.Name
+        InputSheet.Cells(y, 2) = Struct
+        InputSheet.Cells(y, 3) = VName
+        InputSheet.Cells(y, 4) = Round(WorksheetFunction.Sum(Columns(z)), 2)
+        InputSheet.Cells(y, 4).NumberFormat = "0.00"
+        InputSheet.Cells(y, 5) = Tolerance
+        y = y + 1
+
+End Sub
